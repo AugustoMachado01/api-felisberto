@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const bcrypt = require("bcrypt");
+const createUserToken = require("../utils/create-user-token");
 
 module.exports = class UserController {
   static async register(req, res) {
@@ -61,5 +62,35 @@ module.exports = class UserController {
     delete user.password;
 
     res.status(201).json({ message: "User created successfully", user });
+  }
+
+  static async login(req, res) {
+    const { email, password } = req.body;
+
+    if (!email) {
+      res.status(422).json({ message: "O email é obrigatório" });
+      return;
+    }
+
+    if (!password) {
+      res.status(422).json({ message: "A senha é obrigatória" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+
+    if (!validPassword) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    await createUserToken(user, req, res);
   }
 };

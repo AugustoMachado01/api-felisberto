@@ -9,8 +9,10 @@ app.use(bodyParser.json());
 
 // Routes
 const UserRoutes = require("./src/routes/UserRoute");
+const TaskRoutes = require("./src/routes/TaskRoute");
 
 app.use("/users", UserRoutes);
+app.use("/task", TaskRoutes);
 
 app
   .listen(PORT, () => {
